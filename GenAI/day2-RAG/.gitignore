@@ -1,0 +1,17 @@
+# Virtual environments
+venv/
+rag_env/
+.env/
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+
+# FAISS index files (if saved later)
+*.index
