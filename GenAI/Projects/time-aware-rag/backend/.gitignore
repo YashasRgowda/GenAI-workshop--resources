@@ -1,0 +1,38 @@
+# Create .gitignore file
+cat > .gitignore << 'EOF'
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment - CRITICAL
+.env
+.env.local
+
+# Data
+data/faiss_index/
+data/documents/*.pdf
+data/metadata.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+EOF
