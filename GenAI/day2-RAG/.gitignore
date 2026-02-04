@@ -1,9 +1,8 @@
 # Virtual environments
 venv/
 rag_env/
-.env/
 
-# Environment variables
+# Environment variables (FILE, not folder)
 .env
 
 # Python cache
