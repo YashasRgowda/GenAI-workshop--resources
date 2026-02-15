@@ -17,6 +17,12 @@ google-generativeai==0.8.3
 psycopg2-binary==2.9.10
 sqlalchemy==2.0.36
 
+# PDF Processing
+PyPDF2==3.0.1
+
+# Date Parsing
+dateparser==1.2.0
+
 # Utilities
 python-dotenv==1.0.1
 python-multipart==0.0.20
@@ -25,3 +31,6 @@ aiofiles==24.1.0
 # Dev Tools
 pytest==8.3.4
 httpx==0.28.1
+
+# Caching
+redis==5.0.1
