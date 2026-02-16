@@ -1,0 +1,37 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment files
+.env
+.env.local
+.env.docker
+
+# Data files (we don't want local data in the container)
+data/faiss_index/
+data/documents/*.pdf
+data/metadata.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
