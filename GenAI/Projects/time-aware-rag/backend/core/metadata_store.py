@@ -7,10 +7,13 @@ from sqlalchemy import func, text
 import time
 from core.database import Document, SessionLocal
 import uuid
+from core.logger import get_logger
+logger = get_logger("metadata_store")
+
 
 class MetadataStore:
     def __init__(self):
-        print("📋 MetadataStore initialized (PostgreSQL)")
+        logger.info("MetadataStore initialized (PostgreSQL)")
     
     def add_document(
         self,
@@ -54,12 +57,12 @@ class MetadataStore:
             db.refresh(doc)
             
             doc_id = str(doc.doc_id)
-            print(f"✅ Added document to PostgreSQL: {doc_id[:8]}...")
+            logger.info(f"Added document to PostgreSQL: {doc_id[:8]}...")
             return doc_id
         
         except Exception as e:
             db.rollback()
-            print(f"❌ Error adding document: {e}")
+            logger.info(f"Error adding document: {e}")
             raise
         finally:
             db.close()
@@ -108,7 +111,7 @@ class MetadataStore:
             ).all()
             
             result = [self._doc_to_dict(doc) for doc in docs]
-            print(f"✅ Found {len(result)} valid documents for date: {query_date}")
+            logger.info(f"Found {len(result)} valid documents for date: {query_date}")
             return result
         finally:
             db.close()
@@ -133,12 +136,12 @@ class MetadataStore:
             if doc:
                 db.delete(doc)
                 db.commit()
-                print(f"🗑️ Deleted document: {doc_id[:8]}...")
+                logger.info(f"Deleted document: {doc_id[:8]}...")
                 return True
             return False
         except Exception as e:
             db.rollback()
-            print(f"❌ Error deleting document: {e}")
+            logger.info(f"Error deleting document: {e}")
             return False
         finally:
             db.close()
@@ -252,12 +255,12 @@ class MetadataStore:
             db.refresh(new_doc)
             
             new_doc_id = str(new_doc.doc_id)
-            print(f"✅ Created version {next_version} of document {original_doc_id[:8]}...")
+            logger.info(f"Created version {next_version} of document {original_doc_id[:8]}...")
             return new_doc_id
             
         except Exception as e:
             db.rollback()
-            print(f"❌ Error creating version: {e}")
+            logger.info(f"Error creating version: {e}")
             raise
         finally:
             db.close()
@@ -307,7 +310,7 @@ class MetadataStore:
                     "source": v.source
                 })
             
-            print(f"✅ Found {len(result)} versions")
+            logger.info(f"Found {len(result)} versions")
             return result
             
         finally:
@@ -417,7 +420,7 @@ class MetadataStore:
                 })
             
             search_time = (time.time() - start_time) * 1000  # Convert to ms
-            print(f"✅ Full-text search found {len(documents)} results in {search_time:.2f}ms")
+            logger.info(f"Full-text search found {len(documents)} results in {search_time:.2f}ms")
             
             return documents
             
@@ -548,7 +551,7 @@ class MetadataStore:
                 doc = item["doc"]
                 result_docs.append(self._doc_to_dict(doc))
             
-            print(f"✅ Combined search: {len(result_docs)} results")
+            logger.info(f"Combined search: {len(result_docs)} results")
             return result_docs
             
         finally:

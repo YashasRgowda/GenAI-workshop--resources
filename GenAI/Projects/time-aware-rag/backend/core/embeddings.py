@@ -2,14 +2,16 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 from typing import List, Union
 from app.config import get_settings
+from core.logger import get_logger
+logger = get_logger("embeddings")
 
 class EmbeddingModel:
     def __init__(self):
         settings = get_settings()
-        print(f"📥 Loading embedding model: {settings.embedding_model}")
+        logger.info(f"Loading embedding model: {settings.embedding_model}")
         self.model = SentenceTransformer(settings.embedding_model)
         self.dimension = self.model.get_sentence_embedding_dimension()
-        print(f"✅ Model loaded! Embedding dimension: {self.dimension}")
+        logger.info(f"Model loaded! Embedding dimension: {self.dimension}")
     
     def encode(self, texts: Union[str, List[str]], batch_size: int = 32) -> np.ndarray:
         """

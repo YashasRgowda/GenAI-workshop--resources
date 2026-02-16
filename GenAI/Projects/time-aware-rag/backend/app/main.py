@@ -3,14 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.models import HealthCheck
 from app.api import routes
+from app.api import health
+from app.middleware import RequestLoggingMiddleware
+from app.rate_limiter import RateLimitMiddleware
+from core.logger import get_logger
 import os
 
 settings = get_settings()
+logger = get_logger("main")
 
 app = FastAPI(
     title="Time-Aware RAG API",
     description="Retrieval Augmented Generation with Temporal Intelligence",
-    version="1.0.0"
+    version="2.0.0"
 )
 
 # CORS
@@ -22,21 +27,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rate limiting middleware (outermost — checks FIRST before anything else)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=20)
+
+# Request logging middleware
+app.add_middleware(RequestLoggingMiddleware)
+
 # Include routes
 app.include_router(routes.router)
+app.include_router(health.router)
 
-@app.get("/", response_model=HealthCheck)
-async def health_check():
-    """Health check endpoint"""
-    faiss_index_exists = os.path.exists(os.path.join(settings.faiss_index_path, "index.faiss"))
-    metadata_exists = os.path.exists(settings.metadata_path)
-    
-    return HealthCheck(
-        status="healthy",
-        embedding_model=settings.embedding_model,
-        faiss_index_exists=faiss_index_exists,
-        metadata_exists=metadata_exists
-    )
+@app.on_event("startup")
+async def startup_event():
+    logger.info("🚀 Time-Aware RAG API starting up...")
+    logger.info(f"📦 Embedding model: {settings.embedding_model}")
+    logger.info(f"🗄️ Database: connected")
+    logger.info(f"💾 Redis caching: {'enabled' if settings.enable_caching else 'disabled'}")
+    logger.info(f"🛡️ Rate limiting: 20 requests/minute")
+    logger.info("✅ API ready to serve requests")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("🛑 Time-Aware RAG API shutting down...")
 
 if __name__ == "__main__":
     import uvicorn

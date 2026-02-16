@@ -4,13 +4,15 @@ import hashlib
 from typing import Optional, Dict, Any
 from app.config import get_settings
 import time
+from core.logger import get_logger
+logger = get_logger("cache")
 
 class CacheManager:
     def __init__(self):
         settings = get_settings()
         
         if not settings.enable_caching:
-            print("⚠️ Caching is disabled")
+            logger.info("Caching is disabled")
             self.redis_client = None
             self.enabled = False
             return
@@ -28,18 +30,18 @@ class CacheManager:
             
             # Test connection
             self.redis_client.ping()
-            print(f"✅ Redis connected: {settings.redis_host}:{settings.redis_port}")
+            logger.info(f"Redis connected: {settings.redis_host}:{settings.redis_port}")
             
             self.ttl = settings.cache_ttl
             self.enabled = True
             
         except redis.ConnectionError as e:
-            print(f"⚠️ Redis connection failed: {e}")
-            print("⚠️ Caching disabled - queries will run without cache")
+            logger.info(f"Redis connection failed: {e}")
+            logger.info("Caching disabled - queries will run without cache")
             self.redis_client = None
             self.enabled = False
         except Exception as e:
-            print(f"⚠️ Redis initialization error: {e}")
+            logger.info(f"Redis initialization error: {e}")
             self.redis_client = None
             self.enabled = False
     
@@ -90,18 +92,18 @@ class CacheManager:
             if cached_data:
                 # Increment hit counter
                 self.redis_client.incr("cache:hits")
-                print(f"✅ Cache HIT: {cache_key}")
+                logger.info(f"Cache HIT: {cache_key}")
                 
                 # Deserialize JSON
                 return json.loads(cached_data)
             else:
                 # Increment miss counter
                 self.redis_client.incr("cache:misses")
-                print(f"❌ Cache MISS: {cache_key}")
+                logger.info(f"Cache MISS: {cache_key}")
                 return None
                 
         except Exception as e:
-            print(f"⚠️ Cache get error: {e}")
+            logger.info(f"Cache get error: {e}")
             return None
     
     def set(
@@ -136,11 +138,11 @@ class CacheManager:
                 json_data
             )
             
-            print(f"💾 Cached: {cache_key} (TTL: {expiration}s)")
+            logger.info(f"Cached: {cache_key} (TTL: {expiration}s)")
             return True
             
         except Exception as e:
-            print(f"⚠️ Cache set error: {e}")
+            logger.info(f"Cache set error: {e}")
             return False
     
     def delete(self, cache_key: str) -> bool:
@@ -159,10 +161,10 @@ class CacheManager:
         try:
             result = self.redis_client.delete(cache_key)
             if result:
-                print(f"🗑️ Deleted cache: {cache_key}")
+                logger.info(f"Deleted cache: {cache_key}")
             return bool(result)
         except Exception as e:
-            print(f"⚠️ Cache delete error: {e}")
+            logger.info(f"Cache delete error: {e}")
             return False
     
     def clear_all(self, pattern: str = "query:*") -> int:
@@ -185,12 +187,12 @@ class CacheManager:
             if keys:
                 # Delete all matching keys
                 count = self.redis_client.delete(*keys)
-                print(f"🗑️ Cleared {count} cached queries")
+                logger.info(f"Cleared {count} cached queries")
                 return count
             return 0
             
         except Exception as e:
-            print(f"⚠️ Cache clear error: {e}")
+            logger.info(f"Cache clear error: {e}")
             return 0
     
     def get_stats(self) -> Dict[str, Any]:
@@ -230,7 +232,7 @@ class CacheManager:
             }
             
         except Exception as e:
-            print(f"⚠️ Error getting cache stats: {e}")
+            logger.info(f"Error getting cache stats: {e}")
             return {
                 "enabled": True,
                 "error": str(e)

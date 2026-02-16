@@ -4,13 +4,15 @@ from core.vector_store import get_vector_store
 from core.metadata_store import get_metadata_store
 from datetime import datetime, timedelta
 from collections import defaultdict
+from core.logger import get_logger
+logger = get_logger("retriever")
 
 class TimeAwareRetriever:
     def __init__(self):
         self.embedder = get_embedding_model()
         self.vector_store = get_vector_store()
         self.metadata_store = get_metadata_store()
-        print("🧠 TimeAwareRetriever initialized")
+        logger.info("TimeAwareRetriever initialized")
     
     def add_document(
         self,
@@ -52,7 +54,7 @@ class TimeAwareRetriever:
         self.metadata_store.save()
         self.vector_store.save()
         
-        print(f"✅ Document added successfully: {doc_id[:8]}...")
+        logger.info(f"Document added successfully: {doc_id[:8]}...")
         return doc_id
     
     
@@ -71,7 +73,7 @@ class TimeAwareRetriever:
         Returns:
             Dictionary with success/failure statistics
         """
-        print(f"\n📦 Batch upload: Processing {len(documents)} documents...")
+        logger.info(f"\nBatch upload: Processing {len(documents)} documents...")
 
         results = {
             "successful": 0,
@@ -113,7 +115,7 @@ class TimeAwareRetriever:
                     "content_preview": doc["content"][:50],
                     "error": str(e)
                 })
-                print(f"❌ Error processing document {idx}: {e}")
+                logger.info(f"Error processing document {idx}: {e}")
     
         # 3. Batch insert into FAISS (much faster than one-by-one)
         if all_embeddings:
@@ -125,7 +127,7 @@ class TimeAwareRetriever:
         self.metadata_store.save()
         self.vector_store.save()
         
-        print(f"✅ Batch complete: {results['successful']} successful, {results['failed']} failed")
+        logger.info(f"Batch complete: {results['successful']} successful, {results['failed']} failed")
         return results
     
     
@@ -146,7 +148,7 @@ class TimeAwareRetriever:
         Returns:
             Tuple of (documents, scores)
         """
-        print(f"\n🔍 Retrieving for query: '{query}' on date: {query_date}")
+        logger.info(f"\nRetrieving for query: '{query}' on date: {query_date}")
         
         # 1. Embed query
         query_embedding = self.embedder.encode(query)
@@ -156,10 +158,10 @@ class TimeAwareRetriever:
         distances, candidate_ids = self.vector_store.search(query_embedding, k=search_k)
         
         if not candidate_ids:
-            print("⚠️ No candidates found in vector store")
+            logger.info("No candidates found in vector store")
             return [], []
         
-        print(f"📦 Retrieved {len(candidate_ids)} candidates from vector store")
+        logger.info(f"Retrieved {len(candidate_ids)} candidates from vector store")
         
         # 3. Get metadata for candidates
         candidates = self.metadata_store.filter_by_ids(candidate_ids)
@@ -179,7 +181,7 @@ class TimeAwareRetriever:
         valid_docs = [doc for doc, _ in sorted_pairs[:k]]
         valid_scores = [score for _, score in sorted_pairs[:k]]
         
-        print(f"✅ Found {len(valid_docs)} time-valid documents")
+        logger.info(f"Found {len(valid_docs)} time-valid documents")
         
         return valid_docs, valid_scores
     
@@ -214,7 +216,7 @@ class TimeAwareRetriever:
         Returns:
             Dictionary with documents grouped by year
         """
-        print(f"\n📅 Date Range Retrieval: {start_date} to {end_date}")
+        logger.info(f"\nDate Range Retrieval: {start_date} to {end_date}")
         
         # Parse dates
         start = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -253,7 +255,7 @@ class TimeAwareRetriever:
             
             all_documents.extend(docs)
         
-        print(f"✅ Found {len(all_documents)} total documents across {len(periods)} periods")
+        logger.info(f"Found {len(all_documents)} total documents across {len(periods)} periods")
         
         return {
             "periods": periods,
@@ -280,7 +282,7 @@ class TimeAwareRetriever:
         Returns:
             Dictionary with policy versions and changes
         """
-        print(f"\n🔄 Comparing '{topic}' from {start_date} to {end_date}")
+        logger.info(f"\nComparing '{topic}' from {start_date} to {end_date}")
         
         # Get all relevant documents across date range
         range_results = self.retrieve_date_range(
@@ -315,7 +317,7 @@ class TimeAwareRetriever:
                 "content_preview": doc["content"][:300] + "..." if len(doc["content"]) > 300 else doc["content"]
             })
         
-        print(f"✅ Found {len(versions)} versions of '{topic}'")
+        logger.info(f"Found {len(versions)} versions of '{topic}'")
         
         return {
             "topic": topic,

@@ -1,6 +1,8 @@
 import google.generativeai as genai
 from typing import List, Dict
 from app.config import get_settings
+from core.logger import get_logger
+logger = get_logger("gemini")
 
 class GeminiClient:
     def __init__(self):
@@ -9,7 +11,7 @@ class GeminiClient:
         
         # Use Gemini 2.5 Flash (latest and fastest)
         self.model = genai.GenerativeModel('gemini-2.5-flash')
-        print("🤖 Gemini client initialized with gemini-2.5-flash")
+        logger.info("Gemini client initialized with gemini-2.5-flash")
     
     def generate_answer(
         self,
@@ -60,7 +62,7 @@ Answer:"""
             response = self.model.generate_content(prompt)
             return response.text
         except Exception as e:
-            print(f"❌ Error generating answer: {e}")
+            logger.info(f"Error generating answer: {e}")
             return f"Error generating answer: {str(e)}"
 
 # Singleton instance

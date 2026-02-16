@@ -4,6 +4,8 @@ import os
 import pickle
 from typing import List, Tuple, Optional
 from app.config import get_settings
+from core.logger import get_logger
+logger = get_logger("vector_store")
 
 class VectorStore:
     def __init__(self):
@@ -16,14 +18,14 @@ class VectorStore:
         self.index_path = os.path.join(self.settings.faiss_index_path, "index.faiss")
         self.doc_ids_path = os.path.join(self.settings.faiss_index_path, "doc_ids.pkl")
         
-        print("🗄️ VectorStore initialized")
+        logger.info("VectorStore initialized")
     
     def create_index(self, dimension: int):
         """Create a new FAISS index"""
         self.dimension = dimension
         # Using IndexFlatL2 for exact search (good for small-medium datasets)
         self.index = faiss.IndexFlatL2(dimension)
-        print(f"✅ Created FAISS index with dimension: {dimension}")
+        logger.info(f"Created FAISS index with dimension: {dimension}")
     
     def add_vectors(self, embeddings: np.ndarray, doc_ids: List[str]):
         """
@@ -44,7 +46,7 @@ class VectorStore:
         self.index.add(embeddings.astype('float32'))
         self.doc_ids.extend(doc_ids)
         
-        print(f"✅ Added {len(doc_ids)} vectors to index. Total: {self.index.ntotal}")
+        logger.info(f"Added {len(doc_ids)} vectors to index. Total: {self.index.ntotal}")
     
     def search(self, query_embedding: np.ndarray, k: int = 5) -> Tuple[List[float], List[str]]:
         """
@@ -58,7 +60,7 @@ class VectorStore:
             Tuple of (distances, doc_ids)
         """
         if self.index is None or self.index.ntotal == 0:
-            print("⚠️ Index is empty!")
+            logger.info("Index is empty!")
             return [], []
         
         # Ensure correct shape
@@ -73,13 +75,13 @@ class VectorStore:
         result_doc_ids = [self.doc_ids[idx] for idx in indices[0]]
         result_distances = distances[0].tolist()
         
-        print(f"🔍 Found {len(result_doc_ids)} results")
+        logger.info(f"Found {len(result_doc_ids)} results")
         return result_distances, result_doc_ids
     
     def save(self):
         """Save index and doc_ids to disk"""
         if self.index is None:
-            print("⚠️ No index to save")
+            logger.info("No index to save")
             return
         
         os.makedirs(self.settings.faiss_index_path, exist_ok=True)
@@ -91,12 +93,12 @@ class VectorStore:
         with open(self.doc_ids_path, 'wb') as f:
             pickle.dump(self.doc_ids, f)
         
-        print(f"💾 Saved index to {self.index_path}")
+        logger.info(f"Saved index to {self.index_path}")
     
     def load(self) -> bool:
         """Load index and doc_ids from disk"""
         if not os.path.exists(self.index_path):
-            print("⚠️ No saved index found")
+            logger.info("No saved index found")
             return False
         
         try:
@@ -108,10 +110,10 @@ class VectorStore:
             with open(self.doc_ids_path, 'rb') as f:
                 self.doc_ids = pickle.load(f)
             
-            print(f"✅ Loaded index with {self.index.ntotal} vectors")
+            logger.info(f"Loaded index with {self.index.ntotal} vectors")
             return True
         except Exception as e:
-            print(f"❌ Error loading index: {e}")
+            logger.info(f"Error loading index: {e}")
             return False
     
     def get_stats(self) -> dict:

@@ -806,6 +806,46 @@ async def invalidate_document_cache(doc_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# ==================== RATE LIMIT INFO ====================
+
+@router.get("/rate-limit-status")
+async def get_rate_limit_status():
+    """
+    🛡️ Check your current rate limit status.
+    Shows how many requests you have remaining.
+    """
+    try:
+        cache = get_cache_manager()
+        
+        if not cache.enabled or not cache.redis_client:
+            return {
+                "rate_limiting": "disabled",
+                "reason": "Redis not available"
+            }
+        
+        # Count all rate limit keys
+        rate_keys = cache.redis_client.keys("ratelimit:*")
+        
+        active_users = []
+        for key in rate_keys:
+            count = cache.redis_client.get(key)
+            ttl = cache.redis_client.ttl(key)
+            ip = key.split(":", 1)[1] if ":" in key else key
+            active_users.append({
+                "ip": ip,
+                "requests_made": int(count) if count else 0,
+                "resets_in_seconds": ttl
+            })
+        
+        return {
+            "rate_limiting": "enabled",
+            "limit": "20 requests per minute",
+            "active_users": len(active_users),
+            "details": active_users
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 # ==================== SYSTEM INFO & STATS ====================
 

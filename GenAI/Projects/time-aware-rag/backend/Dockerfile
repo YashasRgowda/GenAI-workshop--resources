@@ -35,7 +35,7 @@ COPY . .
 # ============================================
 # Create data directories
 # ============================================
-RUN mkdir -p data/faiss_index data/documents
+RUN mkdir -p data/faiss_index data/documents logs
 
 # ============================================
 # Expose port 8000 (FastAPI default)
