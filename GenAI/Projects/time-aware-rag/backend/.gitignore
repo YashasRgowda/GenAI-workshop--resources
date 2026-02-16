@@ -1,5 +1,3 @@
-# Create .gitignore file
-cat > .gitignore << 'EOF'
 # Virtual Environment
 venv/
 env/
@@ -15,6 +13,7 @@ __pycache__/
 # Environment - CRITICAL
 .env
 .env.local
+.env.docker
 
 # Data
 data/faiss_index/
@@ -35,4 +34,3 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
-EOF
