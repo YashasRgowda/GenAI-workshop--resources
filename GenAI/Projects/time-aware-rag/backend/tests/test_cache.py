@@ -6,10 +6,10 @@ import pytest
 from core.cache import get_cache_manager
 
 
-def test_cache_stats(client):
+def test_cache_stats(client, auth_headers):
     """Test cache stats endpoint returns valid data."""
-    response = client.get("/api/cache/stats")
-    
+    response = client.get("/api/cache/stats", headers=auth_headers)
+
     assert response.status_code == 200
     data = response.json()
     
@@ -70,10 +70,10 @@ def test_cache_delete():
     assert result is None
 
 
-def test_cache_clear(client):
+def test_cache_clear(client, auth_headers):
     """Test clearing all caches via API."""
-    response = client.post("/api/cache/clear")
-    
+    response = client.post("/api/cache/clear", headers=auth_headers)
+
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"

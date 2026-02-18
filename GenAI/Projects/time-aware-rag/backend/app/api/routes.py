@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
+from app.auth import verify_api_key
 from app.models import (
     QueryRequest, 
     QueryResponse, 
@@ -33,7 +34,8 @@ router = APIRouter(prefix="/api", tags=["RAG"])
 
 @router.post("/smart-upload-pdf")
 async def smart_upload_pdf(
-    file: UploadFile = File(..., description="PDF file - dates will be auto-extracted")
+    file: UploadFile = File(..., description="PDF file - dates will be auto-extracted"),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     🤖 SMART PDF UPLOAD - Automatically extracts dates from document!
@@ -101,7 +103,8 @@ async def smart_upload_pdf(
 
 @router.post("/smart-batch-upload-pdf")
 async def smart_batch_upload_pdfs(
-    files: List[UploadFile] = File(..., description="Multiple PDFs - dates auto-extracted from each")
+    files: List[UploadFile] = File(..., description="Multiple PDFs - dates auto-extracted from each"),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     🤖 SMART BATCH UPLOAD - Upload multiple PDFs, AI extracts dates from each!
@@ -201,7 +204,7 @@ async def smart_batch_upload_pdfs(
 
 # Update the /query endpoint with caching
 @router.post("/query", response_model=QueryResponse)
-async def query_documents(request: QueryRequest):
+async def query_documents(request: QueryRequest, api_key: str = Depends(verify_api_key)):
     """Query documents with time-aware retrieval and LLM generation (with caching)"""
     try:
         cache = get_cache_manager()
@@ -274,7 +277,7 @@ async def query_documents(request: QueryRequest):
 # ==================== DATE RANGE QUERIES ====================
 
 @router.post("/query-date-range", response_model=DateRangeQueryResponse)
-async def query_date_range(request: DateRangeQueryRequest):
+async def query_date_range(request: DateRangeQueryRequest, api_key: str = Depends(verify_api_key)):
     """
     📅 Query documents across a date range.
     
@@ -366,7 +369,7 @@ Keep it concise (3-4 sentences)."""
 
 
 @router.post("/compare-policy", response_model=PolicyComparisonResponse)
-async def compare_policy_versions(request: PolicyComparisonRequest):
+async def compare_policy_versions(request: PolicyComparisonRequest, api_key: str = Depends(verify_api_key)):
     """
     🔄 Compare different versions of a policy across time.
     
@@ -445,7 +448,7 @@ Keep it brief (4-5 sentences)."""
 # ==================== DOCUMENT MANAGEMENT ====================
 
 @router.get("/documents", response_model=List[DocumentResponse])
-async def list_documents():
+async def list_documents(api_key: str = Depends(verify_api_key)):
     """List all documents with metadata"""
     try:
         retriever = get_retriever()
@@ -467,7 +470,7 @@ async def list_documents():
 
 
 @router.delete("/documents/{doc_id}")
-async def delete_document(doc_id: str):
+async def delete_document(doc_id: str, api_key: str = Depends(verify_api_key)):
     """Delete a document"""
     try:
         retriever = get_retriever()
@@ -498,7 +501,8 @@ async def create_document_version(
     new_content: str = Form(..., description="Updated content"),
     valid_from: str = Form(..., description="New validity start (YYYY-MM-DD)"),
     valid_to: str = Form(..., description="New validity end (YYYY-MM-DD)"),
-    change_summary: Optional[str] = Form(None, description="Summary of changes")
+    change_summary: Optional[str] = Form(None, description="Summary of changes"),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     📝 Create a new version of an existing document.
@@ -536,7 +540,7 @@ async def create_document_version(
 
 
 @router.get("/documents/{doc_id}/versions", response_model=DocumentVersionHistory)
-async def get_document_version_history(doc_id: str):
+async def get_document_version_history(doc_id: str, api_key: str = Depends(verify_api_key)):
     """
     📚 Get complete version history of a document.
     
@@ -598,7 +602,7 @@ async def get_document_version_history(doc_id: str):
 
 
 @router.get("/documents/{doc_id}/latest")
-async def get_latest_document_version(doc_id: str):
+async def get_latest_document_version(doc_id: str, api_key: str = Depends(verify_api_key)):
     """
     🔄 Get the latest version of a document.
     
@@ -630,7 +634,7 @@ async def get_latest_document_version(doc_id: str):
 # ==================== FULL-TEXT SEARCH ====================
 
 @router.post("/search-fulltext", response_model=FullTextSearchResponse)
-async def full_text_search(request: FullTextSearchRequest):
+async def full_text_search(request: FullTextSearchRequest, api_key: str = Depends(verify_api_key)):
     """
     🔍 Full-text search within document content.
     
@@ -682,7 +686,7 @@ async def full_text_search(request: FullTextSearchRequest):
 
 
 @router.post("/search-combined")
-async def combined_search(request: CombinedSearchRequest):
+async def combined_search(request: CombinedSearchRequest, api_key: str = Depends(verify_api_key)):
     """
     🎯 Combined semantic + full-text search (BEST RESULTS!)
     
@@ -757,7 +761,7 @@ async def combined_search(request: CombinedSearchRequest):
 # ==================== CACHE MANAGEMENT ====================
 
 @router.get("/cache/stats")
-async def get_cache_stats():
+async def get_cache_stats(api_key: str = Depends(verify_api_key)):
     """
     📊 Get cache statistics.
     
@@ -771,7 +775,7 @@ async def get_cache_stats():
 
 
 @router.post("/cache/clear")
-async def clear_cache():
+async def clear_cache(api_key: str = Depends(verify_api_key)):
     """
     🗑️ Clear all cached queries.
     
@@ -790,7 +794,7 @@ async def clear_cache():
 
 
 @router.delete("/cache/invalidate/{doc_id}")
-async def invalidate_document_cache(doc_id: str):
+async def invalidate_document_cache(doc_id: str, api_key: str = Depends(verify_api_key)):
     """
     ♻️ Invalidate caches related to a specific document.
     
@@ -810,7 +814,7 @@ async def invalidate_document_cache(doc_id: str):
 # ==================== RATE LIMIT INFO ====================
 
 @router.get("/rate-limit-status")
-async def get_rate_limit_status():
+async def get_rate_limit_status(api_key: str = Depends(verify_api_key)):
     """
     🛡️ Check your current rate limit status.
     Shows how many requests you have remaining.
@@ -850,7 +854,7 @@ async def get_rate_limit_status():
 # ==================== SYSTEM INFO & STATS ====================
 
 @router.get("/stats")
-async def get_stats():
+async def get_stats(api_key: str = Depends(verify_api_key)):
     """Get system statistics"""
     retriever = get_retriever()
     vector_stats = retriever.vector_store.get_stats()

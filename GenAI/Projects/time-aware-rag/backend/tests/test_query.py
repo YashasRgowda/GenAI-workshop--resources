@@ -34,14 +34,14 @@ def setup_test_document():
         pass
 
 
-def test_query_basic(client):
+def test_query_basic(client, auth_headers):
     """Test basic query returns an answer."""
     response = client.post("/api/query", json={
         "query": "What is the password policy?",
         "query_date": "2024-06-15",
         "k": 5
-    })
-    
+    }, headers=auth_headers)
+
     assert response.status_code == 200
     data = response.json()
     assert "answer" in data
@@ -50,13 +50,13 @@ def test_query_basic(client):
     assert "retrieved_count" in data
 
 
-def test_query_returns_sources(client):
+def test_query_returns_sources(client, auth_headers):
     """Test that query returns source documents."""
     response = client.post("/api/query", json={
         "query": "password requirements",
         "query_date": "2024-06-15",
         "k": 5
-    })
+    }, headers=auth_headers)
     
     assert response.status_code == 200
     data = response.json()
@@ -69,14 +69,14 @@ def test_query_returns_sources(client):
         assert "valid_to" in source
 
 
-def test_query_respects_date(client):
+def test_query_respects_date(client, auth_headers):
     """Test that query with wrong date returns no relevant docs."""
     response = client.post("/api/query", json={
         "query": "password policy",
         "query_date": "2020-01-01",
         "k": 5
-    })
-    
+    }, headers=auth_headers)
+
     assert response.status_code == 200
     data = response.json()
     # Document is valid 2024-2024, so querying 2020 should find nothing
@@ -84,23 +84,23 @@ def test_query_respects_date(client):
     assert "answer" in data
 
 
-def test_query_missing_fields(client):
+def test_query_missing_fields(client, auth_headers):
     """Test that query without required fields returns 422."""
     response = client.post("/api/query", json={
         "query": "test"
         # Missing query_date
-    })
-    
+    }, headers=auth_headers)
+
     assert response.status_code == 422
 
 
-def test_fulltext_search(client):
+def test_fulltext_search(client, auth_headers):
     """Test full-text search endpoint."""
     response = client.post("/api/search-fulltext", json={
         "search_text": "password",
         "limit": 5
-    })
-    
+    }, headers=auth_headers)
+
     assert response.status_code == 200
     data = response.json()
     assert "search_text" in data
@@ -109,15 +109,15 @@ def test_fulltext_search(client):
     assert "search_time_ms" in data
 
 
-def test_date_range_query(client):
+def test_date_range_query(client, auth_headers):
     """Test date range query endpoint."""
     response = client.post("/api/query-date-range", json={
         "query": "password policy",
         "start_date": "2024-01-01",
         "end_date": "2024-12-31",
         "k": 5
-    })
-    
+    }, headers=auth_headers)
+
     assert response.status_code == 200
     data = response.json()
     assert "query" in data

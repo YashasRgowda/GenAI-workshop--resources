@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     redis_db: int = 0
     redis_password: str = ""
     cache_ttl: int = 3600  # 1 hour in seconds
+    api_keys: str = ""
     enable_caching: bool = True
     
     # Server Configuration

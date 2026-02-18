@@ -17,6 +17,14 @@ def client():
     """
     with TestClient(app) as c:
         yield c
+        
+# Test API key (must match one in .env / .env.docker API_KEYS)
+TEST_API_KEY = "rag-sk-dev-key-2024"
+
+@pytest.fixture(scope="module")
+def auth_headers():
+    """Headers with valid API key for authenticated requests."""
+    return {"X-API-Key": TEST_API_KEY}
 
 
 @pytest.fixture(scope="module")

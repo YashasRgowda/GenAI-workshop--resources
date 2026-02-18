@@ -5,10 +5,10 @@ Tests that rate limiting correctly blocks excessive requests.
 import pytest
 
 
-def test_rate_limit_status(client):
+def test_rate_limit_status(client, auth_headers):
     """Test rate limit status endpoint."""
-    response = client.get("/api/rate-limit-status")
-    
+    response = client.get("/api/rate-limit-status", headers=auth_headers)
+
     # Could be 200 or 429 if we've hit the limit
     assert response.status_code in [200, 429]
     
@@ -17,10 +17,10 @@ def test_rate_limit_status(client):
         assert "rate_limiting" in data
 
 
-def test_rate_limit_headers(client):
+def test_rate_limit_headers(client, auth_headers):
     """Test that responses include rate limit headers."""
-    response = client.get("/api/documents")
-    
+    response = client.get("/api/documents", headers=auth_headers)
+
     # Should have rate limit headers
     assert "X-RateLimit-Limit" in response.headers or response.status_code == 429
     
