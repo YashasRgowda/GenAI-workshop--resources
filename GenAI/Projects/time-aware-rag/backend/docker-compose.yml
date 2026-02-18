@@ -1,9 +1,90 @@
-version: "3.8"
+# version: "3.8"
+
+# services:
+#   # ==========================================
+#   # 1. YOUR FASTAPI APP
+#   # ==========================================
+#   app:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: rag-backend
+#     ports:
+#       - "8000:8000"
+#     env_file:
+#       - .env.docker
+#     depends_on:
+#       postgres:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#     volumes:
+#       # Persist FAISS index data between restarts
+#       - faiss_data:/app/data/faiss_index
+#     restart: unless-stopped
+
+#   # ==========================================
+#   # 2. POSTGRESQL DATABASE
+#   # ==========================================
+#   postgres:
+#     image: postgres:16-alpine
+#     container_name: rag-postgres
+#     environment:
+#       POSTGRES_USER: raguser
+#       POSTGRES_PASSWORD: ragpassword123
+#       POSTGRES_DB: ragdb
+#     ports:
+#       - "5433:5432"   # 5433 on your Mac → 5432 inside container (avoids conflict with local PostgreSQL)
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U raguser -d ragdb"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+#     restart: unless-stopped
+
+#   # ==========================================
+#   # 3. REDIS CACHE
+#   # ==========================================
+#   redis:
+#     image: redis:7-alpine
+#     container_name: rag-redis
+#     ports:
+#       - "6380:6379"   # 6380 on your Mac → 6379 inside container (avoids conflict with local Redis)
+#     volumes:
+#       - redis_data:/data
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+#     restart: unless-stopped
+
+# # ==========================================
+# # PERSISTENT VOLUMES
+# # (data survives container restarts)
+# # ==========================================
+# volumes:
+#   postgres_data:
+#   redis_data:
+#   faiss_data:
+
+## What you just created — visual summary:
+
+# docker-compose up
+#     │
+#     ├─→ rag-backend    (your FastAPI app on port 8000)
+#     │     ├─ connects to postgres:5432
+#     │     └─ connects to redis:6379
+#     │
+#     ├─→ rag-postgres   (PostgreSQL on port 5433 externally)
+#     │     └─ data persisted in postgres_data volume
+#     │
+#     └─→ rag-redis      (Redis on port 6380 externally)
+#           └─ data persisted in redis_data volume
 
 services:
-  # ==========================================
-  # 1. YOUR FASTAPI APP
-  # ==========================================
   app:
     build:
       context: .
@@ -19,13 +100,9 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      # Persist FAISS index data between restarts
       - faiss_data:/app/data/faiss_index
     restart: unless-stopped
 
-  # ==========================================
-  # 2. POSTGRESQL DATABASE
-  # ==========================================
   postgres:
     image: postgres:16-alpine
     container_name: rag-postgres
@@ -34,7 +111,7 @@ services:
       POSTGRES_PASSWORD: ragpassword123
       POSTGRES_DB: ragdb
     ports:
-      - "5433:5432"   # 5433 on your Mac → 5432 inside container (avoids conflict with local PostgreSQL)
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -44,14 +121,11 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # ==========================================
-  # 3. REDIS CACHE
-  # ==========================================
   redis:
     image: redis:7-alpine
     container_name: rag-redis
     ports:
-      - "6380:6379"   # 6380 on your Mac → 6379 inside container (avoids conflict with local Redis)
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -61,26 +135,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-# ==========================================
-# PERSISTENT VOLUMES
-# (data survives container restarts)
-# ==========================================
 volumes:
   postgres_data:
   redis_data:
   faiss_data:
-
-
-## What you just created — visual summary:
-
-# docker-compose up
-#     │
-#     ├─→ rag-backend    (your FastAPI app on port 8000)
-#     │     ├─ connects to postgres:5432
-#     │     └─ connects to redis:6379
-#     │
-#     ├─→ rag-postgres   (PostgreSQL on port 5433 externally)
-#     │     └─ data persisted in postgres_data volume
-#     │
-#     └─→ rag-redis      (Redis on port 6380 externally)
-#           └─ data persisted in redis_data volume
