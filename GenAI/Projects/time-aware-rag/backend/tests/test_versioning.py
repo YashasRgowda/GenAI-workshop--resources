@@ -12,17 +12,15 @@ version_test_doc_id = None
 @pytest.fixture(scope="module", autouse=True)
 def clear_rate_limit():
     """Clear rate limit counter before versioning tests."""
-    try:
-        r = redis.Redis(host="redis", port=6379, db=0)
-        for key in r.scan_iter("ratelimit:*"):
-            r.delete(key)
-    except:
+    for host, port in [("redis", 6379), ("localhost", 6379), ("localhost", 6380)]:
         try:
-            r = redis.Redis(host="localhost", port=6380, db=0)
+            r = redis.Redis(host=host, port=port, db=0)
+            r.ping()
             for key in r.scan_iter("ratelimit:*"):
                 r.delete(key)
+            break
         except:
-            pass
+            continue
     yield
 
 
