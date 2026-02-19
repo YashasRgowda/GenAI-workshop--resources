@@ -851,6 +851,47 @@ async def get_rate_limit_status(api_key: str = Depends(verify_api_key)):
     except Exception as e:
         return {"error": str(e)}
 
+# ==================== RAG EVALUATION ====================
+@router.post("/evaluate")
+async def run_evaluation(api_key: str = Depends(verify_api_key)):
+    """
+    Run RAG evaluation suite and return metrics.
+    Tests retrieval accuracy, time relevance, and answer quality.
+    """
+    from fastapi.testclient import TestClient
+    from app.main import app as main_app
+    from evaluation.test_dataset import TEST_CASES, SEED_DOCUMENTS
+    from evaluation.evaluator import run_full_evaluation
+    
+    retriever = get_retriever()
+    doc_ids = []
+    
+    try:
+        # Seed test documents
+        for doc in SEED_DOCUMENTS:
+            doc_id = retriever.add_document(
+                content=doc["content"],
+                valid_from=doc["valid_from"],
+                valid_to=doc["valid_to"],
+                source=doc["source"]
+            )
+            doc_ids.append(doc_id)
+        
+        # Run evaluation
+        auth_headers = {"X-API-Key": api_key}
+        with TestClient(main_app) as test_client:
+            report = run_full_evaluation(test_client, TEST_CASES, auth_headers)
+        
+        return report
+        
+    finally:
+        # Cleanup test documents
+        for doc_id in doc_ids:
+            try:
+                retriever.delete_document(doc_id)
+            except:
+                pass
+
 # ==================== SYSTEM INFO & STATS ====================
 
 @router.get("/stats")
