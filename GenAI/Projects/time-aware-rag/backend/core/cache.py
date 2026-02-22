@@ -18,19 +18,27 @@ class CacheManager:
             return
         
         try:
-            # Connect to Redis
-            self.redis_client = redis.Redis(
-                host=settings.redis_host,
-                port=settings.redis_port,
-                db=settings.redis_db,
-                password=settings.redis_password if settings.redis_password else None,
-                decode_responses=True,  # Automatically decode bytes to strings
-                socket_connect_timeout=5
-            )
+            # Connect to Redis - prefer URL (Render), fall back to host/port (Docker/local)
+            if settings.redis_url:
+                self.redis_client = redis.from_url(
+                    settings.redis_url,
+                    decode_responses=True,
+                    socket_connect_timeout=5
+                )
+                logger.info(f"Redis connected via URL")
+            else:
+                self.redis_client = redis.Redis(
+                    host=settings.redis_host,
+                    port=settings.redis_port,
+                    db=settings.redis_db,
+                    password=settings.redis_password if settings.redis_password else None,
+                    decode_responses=True,
+                    socket_connect_timeout=5
+                )
+                logger.info(f"Redis connected: {settings.redis_host}:{settings.redis_port}")
             
             # Test connection
             self.redis_client.ping()
-            logger.info(f"Redis connected: {settings.redis_host}:{settings.redis_port}")
             
             self.ttl = settings.cache_ttl
             self.enabled = True

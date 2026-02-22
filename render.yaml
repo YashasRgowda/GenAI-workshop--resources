@@ -1,0 +1,40 @@
+databases:
+  - name: rag-postgres
+    plan: free
+    databaseName: ragdb
+    user: raguser
+
+services:
+  - type: redis
+    name: rag-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
+  - type: web
+    name: rag-backend
+    runtime: python
+    plan: free
+    rootDir: GenAI/Projects/time-aware-rag/backend
+    buildCommand: |
+      pip install --upgrade pip &&
+      pip install -r requirements.txt &&
+      python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+    startCommand: python init_db.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: API_KEYS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rag-postgres
+          property: connectionURI
+      - key: REDIS_URL
+        fromService:
+          name: rag-redis
+          type: redis
+          property: connectionURI
+      - key: EMBEDDING_MODEL
+        value: sentence-transformers/all-MiniLM-L6-v2

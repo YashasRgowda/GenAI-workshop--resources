@@ -20,12 +20,13 @@ class Settings(BaseSettings):
     db_pool_size: int = 10
     db_max_overflow: int = 20
     
-    # Redis Configuration (NEW)
+    # Redis Configuration
+    redis_url: str = ""
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
     redis_password: str = ""
-    cache_ttl: int = 3600  # 1 hour in seconds
+    cache_ttl: int = 3600
     api_keys: str = ""
     enable_caching: bool = True
     
