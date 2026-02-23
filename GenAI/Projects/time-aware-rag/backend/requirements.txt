@@ -8,12 +8,13 @@ pydantic-settings==2.7.1
 sentence-transformers==3.3.1
 faiss-cpu==1.9.0.post1
 numpy==2.2.1
-torch>=2.6.0  # Changed: Python 3.13 needs torch 2.6+
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.6.0+cpu
 
 # LLM
 google-generativeai==0.8.3
 
-# Database (for Phase 2)
+# Database
 psycopg2-binary==2.9.10
 sqlalchemy==2.0.36
 
